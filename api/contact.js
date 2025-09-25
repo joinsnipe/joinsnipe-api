@@ -13,6 +13,17 @@ export default function handler(req, res) {
 
   try {
     const { name, email, message } = req.body || {};
+// Ver lo que llega tal cual
+console.log("📩 RAW BODY:", req.body);
+
+// Si "message" es un JSON en texto (como hicimos), lo intento leer para verlo bonito
+try {
+  const parsed = typeof message === "string" ? JSON.parse(message) : message;
+  console.log("🧩 PARSED MESSAGE:", parsed);
+} catch (e) {
+  console.log("⚠️ No se pudo parsear 'message' como JSON");
+}
+
 
     // validaciones simples
     if (!name || !email || !message) {
