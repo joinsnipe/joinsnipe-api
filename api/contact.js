@@ -1,6 +1,7 @@
+
 // api/contact.js
-export default function handler(req, res) {
-  // CORS básico (si luego tienes dominio propio, cámbialo aquí)
+export default async function handler(req, res) {
+  // CORS básico
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -12,18 +13,9 @@ export default function handler(req, res) {
   }
 
   try {
-    const { name, email, message } = req.body || {};
-// Ver lo que llega tal cual
-console.log("📩 RAW BODY:", req.body);
+    const { name, email, message, source, ...rest } = req.body || {};
 
-// Si "message" es un JSON en texto (como hicimos), lo intento leer para verlo bonito
-try {
-  const parsed = typeof message === "string" ? JSON.parse(message) : message;
-  console.log("🧩 PARSED MESSAGE:", parsed);
-} catch (e) {
-  console.log("⚠️ No se pudo parsear 'message' como JSON");
-}
-
+    console.log("📩 RAW BODY:", req.body);
 
     // validaciones simples
     if (!name || !email || !message) {
@@ -39,13 +31,39 @@ try {
       return res.status(400).json({ ok: false, error: "Email no válido" });
     }
 
-    // aquí iría tu lógica real (guardar, enviar email, etc.)
+    // 🔗 Reenviar a Make (webhook)
+    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/XXXXXX"; // <-- pega tu webhook aquí
+
+    try {
+      const payload = {
+        // si no viene `source` desde el formulario, forzamos "web-support"
+        source: source || "web-support",
+        name,
+        email,
+        message,
+        ...rest,
+        ts: new Date().toISOString(),
+      };
+
+      const resp = await fetch(MAKE_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      console.log("➡️ Enviado a Make, status:", resp.status);
+    } catch (err) {
+      console.error("❌ Error enviando a Make:", err);
+    }
+
+    // Respuesta al navegador
     return res.status(200).json({
       ok: true,
-      received: { name, email, message },
+      received: { name, email, message, source: source || "web-support" },
     });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ ok: false, error: "Error interno" });
   }
-}
+};
+
