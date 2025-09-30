@@ -16,10 +16,17 @@ export default async function handler(req, res) {
     const { name, email, message, source, ...rest } = req.body || {};
     const src = (source || "web-support").toLowerCase();
 
+// 👇 añade logs aquí
+console.log("→ source:", src);
+console.log("→ payload:", JSON.stringify({ name, email, hasMessage: !!message }));
+
+
     // ✅ Validación según tipo
     if (src === "web-early") {
       if (!name || !message) {
-        return res.status(400).json({ ok: false, error: "Faltan name o message (web-early)" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "Faltan name o message (web-early)" });
       }
     } else {
       if (!name || !email || !message) {
@@ -34,24 +41,26 @@ export default async function handler(req, res) {
       }
     }
 
-    // 🔗 Webhook Make desde ENV
-    const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL ?? "https://hook.eu2.make.com/ohwzymng9o4j8bx48xeons4x5dztzy4h";
+    // 🔗 Webhook Make desde ENV (sin fallback)
+    const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL;
     if (!MAKE_WEBHOOK_URL) {
-      return res.status(500).json({ ok: false, error: "Config faltante: MAKE_WEBHOOK_URL" });
+      return res
+        .status(500)
+        .json({ ok: false, error: "Config faltante: MAKE_WEBHOOK_URL" });
     }
 
     // Payload (preservamos todo)
     const payload = {
-      source: src,              // web-support | web-contact | web-early
+      source: src, // web-support | web-contact | web-early
       name,
       email,
-      message,                  // en Early, aquí viaja JSON con q1..q10 (string u objeto)
-      ...rest,                  // category, phone, consent, attachmentUrl, ip, etc.
-      ua: rest.ua || req.headers["user-agent"] || undefined,
+      message, // en Early, aquí puede viajar JSON con q1..q10 (string u objeto)
+      ...rest, // category, phone, consent, attachmentUrl, ip, etc.
+      ua: rest?.ua || req.headers["user-agent"] || undefined,
       ts: new Date().toISOString(),
     };
 
-    // Reenviar a Make
+    // Reenviar a Make (no bloquea la respuesta)
     try {
       await fetch(MAKE_WEBHOOK_URL, {
         method: "POST",
@@ -60,6 +69,7 @@ export default async function handler(req, res) {
       });
     } catch (err) {
       console.error("❌ Error enviando a Make:", err);
+      // seguimos respondiendo ok (no rompemos UX)
     }
 
     return res.status(200).json({
