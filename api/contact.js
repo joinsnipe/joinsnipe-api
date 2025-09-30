@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     }
 
     // 🔗 Reenviar a Make (webhook)
-    const MAKE_WEBHOOK_URL = "https://hook.eu1.make.com/XXXXXX"; // <-- pega tu webhook aquí
+    const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/ohwzymng9o4j8bx48xeons4x5dztzy4h"; // <-- pega tu webhook aquí
 
     try {
       const payload = {
