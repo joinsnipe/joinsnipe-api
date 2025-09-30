@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     }
 
     // 🔗 Webhook Make desde ENV
-    const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL;
+    const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL ?? "https://hook.eu2.make.com/ohwzymng9o4j8bx48xeons4x5dztzy4h";
     if (!MAKE_WEBHOOK_URL) {
       return res.status(500).json({ ok: false, error: "Config faltante: MAKE_WEBHOOK_URL" });
     }
