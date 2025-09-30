@@ -16,14 +16,12 @@ export default async function handler(req, res) {
     const { name, email, message, source, ...rest } = req.body || {};
     const src = (source || "web-support").toLowerCase();
 
-    // ✅ Validación según el tipo de formulario
+    // ✅ Validación según tipo
     if (src === "web-early") {
-      // Early: solo exige name + message (q1..q10 viajan dentro de message)
       if (!name || !message) {
         return res.status(400).json({ ok: false, error: "Faltan name o message (web-early)" });
       }
     } else {
-      // Contacto/Soporte: exige name + email + message
       if (!name || !email || !message) {
         return res.status(400).json({
           ok: false,
@@ -36,19 +34,19 @@ export default async function handler(req, res) {
       }
     }
 
-    // 🔗 Webhook Make desde ENV (no lo hardcodees)
+    // 🔗 Webhook Make desde ENV
     const MAKE_WEBHOOK_URL = process.env.MAKE_WEBHOOK_URL;
     if (!MAKE_WEBHOOK_URL) {
       return res.status(500).json({ ok: false, error: "Config faltante: MAKE_WEBHOOK_URL" });
     }
 
-    // Construimos payload y preservamos todo
+    // Payload (preservamos todo)
     const payload = {
-      source: src,          // web-support | web-contact | web-early
+      source: src,              // web-support | web-contact | web-early
       name,
       email,
-      message,              // en Early, aquí viaja el JSON con q1..q10 (string u objeto)
-      ...rest,              // category, phone, consent, attachmentUrl, ip, etc.
+      message,                  // en Early, aquí viaja JSON con q1..q10 (string u objeto)
+      ...rest,                  // category, phone, consent, attachmentUrl, ip, etc.
       ua: rest.ua || req.headers["user-agent"] || undefined,
       ts: new Date().toISOString(),
     };
