@@ -1,3 +1,13 @@
-﻿node_modules/
-.vercel/
-.env
+# Ignora todo
+*
+
+# Mantén solo lo necesario
+!.gitignore
+!package.json
+!package-lock.json
+!yarn.lock
+!README.md
+!vercel.json
+!vercel.*
+!api/
+!api/**
